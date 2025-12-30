@@ -1,14 +1,20 @@
 package com.pkdev.netomitask.ui
 
+import android.Manifest
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.view.View
 import androidx.activity.viewModels
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.android.material.snackbar.Snackbar
 import com.pkdev.netomitask.ui.Adapters.ChatListAdapter
 import com.pkdev.netomitask.ViewModel.ChatViewModel
 import com.pkdev.netomitask.Model.ListConnection
+import com.pkdev.netomitask.R
 import com.pkdev.netomitask.databinding.ActivityMainBinding
 import dagger.hilt.android.HiltAndroidApp
 import kotlin.collections.get
@@ -18,6 +24,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private val viewModel: ChatViewModel by viewModels()
+    private lateinit var connectivityManager: ConnectivityManager
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +32,32 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.getRoot())
 
-        viewModel.loadConnections()
+        connectivityManager = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        if(isNetworkAvailable()) {
+            viewModel.loadConnections()
+        }
+        else{
+            binding.apply {
+                retryBtn.visibility = View.VISIBLE
+                noChat.text = getString(R.string.no_internet_connection)
+                chatRv.visibility = View.GONE
+                noChat.visibility = View.VISIBLE
+                progressBar.visibility = View.GONE
+            }
+        }
+
+        binding.retryBtn.setOnClickListener {
+            if(isNetworkAvailable()) {
+                binding.apply {
+                    retryBtn.visibility = View.GONE
+                    noChat.visibility = View.GONE
+                }
+                viewModel.loadConnections()
+            }
+            else{
+                Snackbar.make(binding.root, getString(R.string.no_internet_connection), Snackbar.LENGTH_SHORT).show()
+            }
+        }
 
         addObservers()
 
@@ -33,7 +65,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.loadConnections()
+        if(isNetworkAvailable()) {
+            viewModel.loadConnections()
+        }
+        else{
+            Snackbar.make(binding.root, getString(R.string.no_internet_connection), Snackbar.LENGTH_SHORT).show()
+        }
     }
 
     private fun addObservers() {
@@ -49,6 +86,7 @@ class MainActivity : AppCompatActivity() {
                     chatAdapter.submit(getLatestMessageList(connectionList))
                 }
             } else {
+                binding.noChat.text = getString(R.string.no_chat_found)
                 binding.chatRv.visibility = View.GONE
                 binding.noChat.visibility = View.VISIBLE
             }
@@ -84,6 +122,16 @@ class MainActivity : AppCompatActivity() {
                 putExtra("latMessage", latMessage)
             })
         }
+    }
+
+    @RequiresPermission(Manifest.permission.ACCESS_NETWORK_STATE)
+    fun isNetworkAvailable(): Boolean {
+        val network = connectivityManager.activeNetwork ?: return false
+        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 
 

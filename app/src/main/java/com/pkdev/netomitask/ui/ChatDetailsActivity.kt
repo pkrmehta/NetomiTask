@@ -100,6 +100,7 @@ class ChatDetailsActivity : AppCompatActivity() {
     }
 
     val networkCallback = object : ConnectivityManager.NetworkCallback() {
+
         override fun onAvailable(network: Network) {
             Handler(Looper.getMainLooper()).post {
                 connectChannel(channelName)

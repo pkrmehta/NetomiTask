@@ -20,7 +20,7 @@
         android:id="@+id/noChat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="No Chat Found"
+        android:text="@string/no_chat_found"
         android:textSize="25sp"
         android:textStyle="bold"
         android:visibility="gone"
@@ -29,12 +29,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/retryBtn"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/noChat"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="@string/retry"/>
+
     <TextView
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/colorPrimaryDark"
-        android:text="Chats"
+        android:text="@string/chats"
         android:textAlignment="center"
         android:textColor="@color/white"
         android:textSize="24sp"
